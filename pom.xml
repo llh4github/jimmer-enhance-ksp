@@ -12,7 +12,10 @@
         <module>core</module>
     </modules>
     <name>jimmer-enhance-ksp</name>
-
+   <scm>
+        <connection>scm:git:https://github.com/llh4github/jimmer-enhance-ksp</connection>
+        <tag>HEAD</tag>
+    </scm>
     <properties>
         <kotlin.version>1.7.20</kotlin.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
