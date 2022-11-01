@@ -4,7 +4,7 @@
 
     <artifactId>jimmer-enhance-ksp</artifactId>
     <groupId>llh4github.jimmer</groupId>
-    <version>0.0.1</version>
+    <version>0.0.2-SNAPSHOT</version>
     <packaging>pom</packaging>
 
     <modules>
@@ -13,7 +13,7 @@
     <name>jimmer-enhance-ksp</name>
    <scm>
         <connection>scm:git:https://github.com/llh4github/jimmer-enhance-ksp</connection>
-        <tag>v0.0.1</tag>
+        <tag>HEAD</tag>
     </scm>
     <properties>
         <kotlin.version>1.7.20</kotlin.version>
