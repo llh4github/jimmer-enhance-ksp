@@ -83,13 +83,13 @@ class DaoClassGen(private val classDefinition: ClassDefinition) {
             .addStatement("%M(%T::class).by{", JimmerMember.newFun, model)
         classDefinition.fields.forEach {
             builder.beginControlFlow("if(model.%L != null)", it.name)
-                .addStatement("\t%L = model.%L!!", it.name, it.name)
+                .addStatement("%L = model.%L!!", it.name, it.name)
                 .endControlFlow()
         }
         builder.addStatement("}")
         val funSpec = builder
             .addStatement("){")
-            .addStatement("\tsetMode(%T.INSERT_ONLY)", JimmerMember.saveMode)
+            .addStatement("setMode(%T.INSERT_ONLY)", JimmerMember.saveMode)
             .addStatement("}")
             .addStatement("return result.totalAffectedRowCount")
             .build()
