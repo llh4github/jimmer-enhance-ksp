@@ -25,7 +25,7 @@ class DaoClassGen(private val classDefinition: ClassDefinition) {
                 PropertySpec
                     .builder(dbVar, JimmerMember.ktSqlClient)
                     .initializer(dbVar)
-                    .addModifiers(KModifier.PRIVATE)
+                    .addModifiers(KModifier.PUBLIC) // 改为public，方便做其他查询
                     .build()
             )
             .addFunction(updateByIdFun())
