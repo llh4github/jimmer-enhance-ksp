@@ -1,8 +1,8 @@
-package llh4github.jimmer.generator
+package llh4github.jimmer.core.generator
 
 import com.squareup.kotlinpoet.*
-import llh4github.jimmer.model.ClassDefinition
-import llh4github.jimmer.util.JimmerMember
+import llh4github.jimmer.core.model.ClassDefinition
+import llh4github.jimmer.core.util.JimmerMember
 
 /**
  * 辅助data class生成器

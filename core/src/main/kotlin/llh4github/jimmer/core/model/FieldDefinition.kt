@@ -1,4 +1,4 @@
-package llh4github.jimmer.model
+package llh4github.jimmer.core.model
 
 import com.squareup.kotlinpoet.ClassName
 

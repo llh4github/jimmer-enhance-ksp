@@ -1,4 +1,4 @@
-package llh4github.jimmer.model
+package llh4github.jimmer.core.model
 
 import com.google.devtools.ksp.processing.CodeGenerator
 import com.google.devtools.ksp.processing.KSPLogger

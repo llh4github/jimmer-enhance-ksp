@@ -1,9 +1,9 @@
-package llh4github.jimmer
+package llh4github.jimmer.core
 
 import com.google.devtools.ksp.processing.SymbolProcessor
 import com.google.devtools.ksp.processing.SymbolProcessorEnvironment
 import com.google.devtools.ksp.processing.SymbolProcessorProvider
-import llh4github.jimmer.model.ContextGen
+import llh4github.jimmer.core.model.ContextGen
 
 /**
  *

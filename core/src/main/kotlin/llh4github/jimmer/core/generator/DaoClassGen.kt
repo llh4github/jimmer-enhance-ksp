@@ -1,9 +1,9 @@
-package llh4github.jimmer.generator
+package llh4github.jimmer.core.generator
 
 import com.squareup.kotlinpoet.*
 import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.parameterizedBy
-import llh4github.jimmer.model.ClassDefinition
-import llh4github.jimmer.util.JimmerMember
+import llh4github.jimmer.core.model.ClassDefinition
+import llh4github.jimmer.core.util.JimmerMember
 
 /**
  *
@@ -20,6 +20,14 @@ class DaoClassGen(private val classDefinition: ClassDefinition) {
     fun buildDataClass(): FileSpec {
         val typeSpec = TypeSpec.classBuilder(classDefinition.daoClassName)
             .addModifiers(KModifier.ABSTRACT)
+            .primaryConstructor(FunSpec.constructorBuilder().addParameter(dbVar, JimmerMember.ktSqlClient).build())
+            .addProperty(
+                PropertySpec
+                    .builder(dbVar, JimmerMember.ktSqlClient)
+                    .initializer(dbVar)
+                    .addModifiers(KModifier.PRIVATE)
+                    .build()
+            )
             .addFunction(updateByIdFun())
             .addAnnotation(AnnotationSpec.builder(Suppress::class)
                 .apply {
@@ -32,13 +40,13 @@ class DaoClassGen(private val classDefinition: ClassDefinition) {
             .addFunction(getByIdsFun())
             .addFunction(deleteByIdFun())
             .addFunction(deleteByIdsFun())
-            .addProperty(
-                PropertySpec
-                    .builder(dbVar, JimmerMember.ktSqlClient)
-                    .addModifiers(KModifier.ABSTRACT)
-                    .mutable(false)
-                    .build()
-            )
+//            .addProperty(
+//                PropertySpec
+//                    .builder(dbVar, JimmerMember.ktSqlClient)
+//                    .addModifiers(KModifier.ABSTRACT)
+//                    .mutable(false)
+//                    .build()
+//            )
         val fieldNames = classDefinition.fields.map { it.name }.toList()
         return FileSpec.builder(classDefinition.assistPackageName(), classDefinition.daoClassName)
             .addType(typeSpec.build())
@@ -83,13 +91,13 @@ class DaoClassGen(private val classDefinition: ClassDefinition) {
             .addStatement("%M(%T::class).by{", JimmerMember.newFun, model)
         classDefinition.fields.forEach {
             builder.beginControlFlow("if(model.%L != null)", it.name)
-                .addStatement("\t%L = model.%L!!", it.name, it.name)
+                .addStatement("%L = model.%L!!", it.name, it.name)
                 .endControlFlow()
         }
         builder.addStatement("}")
         val funSpec = builder
             .addStatement("){")
-            .addStatement("\tsetMode(%T.INSERT_ONLY)", JimmerMember.saveMode)
+            .addStatement("setMode(%T.INSERT_ONLY)", JimmerMember.saveMode)
             .addStatement("}")
             .addStatement("return result.totalAffectedRowCount")
             .build()

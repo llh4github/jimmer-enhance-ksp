@@ -1,4 +1,4 @@
-package llh4github.jimmer
+package llh4github.jimmer.core
 
 import com.facebook.ktfmt.format.Formatter
 import com.facebook.ktfmt.format.FormattingOptions
@@ -12,16 +12,15 @@ import com.google.devtools.ksp.symbol.KSPropertyDeclaration
 import com.google.devtools.ksp.symbol.KSType
 import com.squareup.kotlinpoet.FileSpec
 import com.squareup.kotlinpoet.ksp.toTypeName
-import com.squareup.kotlinpoet.ksp.writeTo
-import llh4github.jimmer.generator.DaoClassGen
-import llh4github.jimmer.generator.DataClassGen
-import llh4github.jimmer.model.ClassDefinition
-import llh4github.jimmer.model.ContextGen
-import llh4github.jimmer.model.FieldDefinition
-import llh4github.jimmer.util.JimmerAnno
-import llh4github.jimmer.util.hasAnno
-import llh4github.jimmer.util.hasAnyAnno
-import llh4github.jimmer.util.ignoreAnnoList
+import llh4github.jimmer.core.generator.DaoClassGen
+import llh4github.jimmer.core.generator.DataClassGen
+import llh4github.jimmer.core.model.ClassDefinition
+import llh4github.jimmer.core.model.ContextGen
+import llh4github.jimmer.core.model.FieldDefinition
+import llh4github.jimmer.core.util.JimmerAnno
+import llh4github.jimmer.core.util.hasAnno
+import llh4github.jimmer.core.util.hasAnyAnno
+import llh4github.jimmer.core.util.ignoreAnnoList
 import org.jetbrains.kotlin.konan.file.use
 import java.util.concurrent.atomic.AtomicBoolean
 
