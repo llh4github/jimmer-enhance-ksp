@@ -1,0 +1,20 @@
+[versions]
+kotlin = "1.7.10"
+jimmer = "0.4.3"
+kotlinpoet = "1.12.0"
+junit = "5.9.0"
+googleKsp = "1.7.10-1.0.6"
+ktfmt = "0.41"
+
+[libraries]
+kotlin-stdlib = { module = "org.jetbrains.kotlin:kotlin-stdlib-jdk8", version.ref = "kotlin" }
+googleKsp = { module = "com.google.devtools.ksp:symbol-processing-api", version.ref = "googleKsp" }
+jimmer-ksp = { module = "org.babyfish.jimmer:jimmer-ksp", version.ref = "jimmer" }
+jimmer-sql = { module = "org.babyfish.jimmer:jimmer-sql-kotlin", version.ref = "jimmer" }
+jimmer-kotlin = { module = "org.babyfish.jimmer:jimmer-core-kotlin", version.ref = "jimmer" }
+kotlinpoet = { module = "com.squareup:kotlinpoet", version.ref = "kotlinpoet" }
+kotlinpoet-ksp = { module = "com.squareup:kotlinpoet-ksp", version.ref = "kotlinpoet" }
+ktfmt = { module = "com.facebook:ktfmt", version.ref = "ktfmt" }
+# test lib
+junit-api = { module = "org.junit.jupiter:junit-jupiter-api", version.ref = "junit" }
+junit-engine = { module = "org.junit.jupiter:junit-jupiter-engine", version.ref = "junit" }
