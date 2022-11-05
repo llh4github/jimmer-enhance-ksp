@@ -1,14 +1,10 @@
 plugins {
-    // Apply the org.jetbrains.kotlin.jvm Plugin to add support for Kotlin.
-
     kotlin("jvm") version "1.7.10"
-
     `java-library`
     `maven-publish`
 }
 
 repositories {
-    // Use Maven Central for resolving dependencies.
     mavenCentral()
 }
 val generateSources = tasks.register<Jar>("generateSources") {
