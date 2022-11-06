@@ -35,6 +35,7 @@ class DaoClassGen(private val classDefinition: ClassDefinition) {
                 }
                 .build())
             .addFunction(insertBySupportFun())
+            .addFunction(upsertBySupportFun())
             .addFunction(updateByIdFun())
             .addFunction(exampleBuildFun())
             .addFunction(getByIdFun())
@@ -55,7 +56,7 @@ class DaoClassGen(private val classDefinition: ClassDefinition) {
     private fun updateByIdFun(): FunSpec {
         val funSpec = FunSpec.builder("updateByIdSupport")
             .addParameter(modelVar, modelSupport)
-            .addKdoc("通过主键更新非空字段的值。调用前保证主键非空")
+            .addKdoc("通过主键更新非空字段的值。调用前请保证主键非空")
             .returns(Int::class)
             .addCode("return db.createUpdate(%L::class){", classDefinition.className)
             .addCode("\n")
@@ -75,6 +76,28 @@ class DaoClassGen(private val classDefinition: ClassDefinition) {
         TypeSpec.companionObjectBuilder()
             .build()
         return funSpec.build()
+    }
+
+    private fun upsertBySupportFun(): FunSpec {
+
+        val builder = FunSpec.builder("upsertBySupport")
+            .addKdoc("保存或更新数据。")
+            .addParameter(modelVar, modelSupport)
+            .returns(Int::class)
+            .addStatement("val result = $dbVar.entities.save(")
+            .addStatement("%M(%T::class).by{", JimmerMember.newFun, model)
+        classDefinition.fields.forEach {
+            builder.beginControlFlow("if(model.%L != null)", it.name)
+                .addStatement("%L = model.%L!!", it.name, it.name)
+                .endControlFlow()
+        }
+        builder.addStatement("}")
+        val funSpec = builder
+            .addStatement(")")
+            .addStatement("return result.totalAffectedRowCount")
+            .build()
+
+        return funSpec
     }
 
     private fun insertBySupportFun(): FunSpec {
