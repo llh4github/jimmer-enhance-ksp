@@ -30,6 +30,9 @@ object JimmerMember {
     fun byFunc(draftClass: String): ClassName {
         return ClassName(draftClass, "by")
     }
+
+    val kExample = ClassName("org.babyfish.jimmer.sql.kt.ast.query","KExample")
+    val exampleFun = MemberName("org.babyfish.jimmer.sql.kt.ast.query","example")
 }
 
 /**

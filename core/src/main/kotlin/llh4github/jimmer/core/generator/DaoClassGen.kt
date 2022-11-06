@@ -25,10 +25,9 @@ class DaoClassGen(private val classDefinition: ClassDefinition) {
                 PropertySpec
                     .builder(dbVar, JimmerMember.ktSqlClient)
                     .initializer(dbVar)
-                    .addModifiers(KModifier.PRIVATE)
+                    .addModifiers(KModifier.PUBLIC) // 改为public，方便做其他查询
                     .build()
             )
-            .addFunction(updateByIdFun())
             .addAnnotation(AnnotationSpec.builder(Suppress::class)
                 .apply {
                     addMember("\"RedundantVisibilityModifier\"")
@@ -36,17 +35,14 @@ class DaoClassGen(private val classDefinition: ClassDefinition) {
                 }
                 .build())
             .addFunction(insertBySupportFun())
+            .addFunction(upsertBySupportFun())
+            .addFunction(updateByIdFun())
+            .addFunction(exampleBuildFun())
             .addFunction(getByIdFun())
             .addFunction(getByIdsFun())
             .addFunction(deleteByIdFun())
             .addFunction(deleteByIdsFun())
-//            .addProperty(
-//                PropertySpec
-//                    .builder(dbVar, JimmerMember.ktSqlClient)
-//                    .addModifiers(KModifier.ABSTRACT)
-//                    .mutable(false)
-//                    .build()
-//            )
+
         val fieldNames = classDefinition.fields.map { it.name }.toList()
         return FileSpec.builder(classDefinition.assistPackageName(), classDefinition.daoClassName)
             .addType(typeSpec.build())
@@ -60,6 +56,7 @@ class DaoClassGen(private val classDefinition: ClassDefinition) {
     private fun updateByIdFun(): FunSpec {
         val funSpec = FunSpec.builder("updateByIdSupport")
             .addParameter(modelVar, modelSupport)
+            .addKdoc("通过主键更新非空字段的值。调用前请保证主键非空")
             .returns(Int::class)
             .addCode("return db.createUpdate(%L::class){", classDefinition.className)
             .addCode("\n")
@@ -79,6 +76,28 @@ class DaoClassGen(private val classDefinition: ClassDefinition) {
         TypeSpec.companionObjectBuilder()
             .build()
         return funSpec.build()
+    }
+
+    private fun upsertBySupportFun(): FunSpec {
+
+        val builder = FunSpec.builder("upsertBySupport")
+            .addKdoc("保存或更新数据。")
+            .addParameter(modelVar, modelSupport)
+            .returns(Int::class)
+            .addStatement("val result = $dbVar.entities.save(")
+            .addStatement("%M(%T::class).by{", JimmerMember.newFun, model)
+        classDefinition.fields.forEach {
+            builder.beginControlFlow("if(model.%L != null)", it.name)
+                .addStatement("%L = model.%L!!", it.name, it.name)
+                .endControlFlow()
+        }
+        builder.addStatement("}")
+        val funSpec = builder
+            .addStatement(")")
+            .addStatement("return result.totalAffectedRowCount")
+            .build()
+
+        return funSpec
     }
 
     private fun insertBySupportFun(): FunSpec {
@@ -124,7 +143,7 @@ class DaoClassGen(private val classDefinition: ClassDefinition) {
     }
 
     private fun deleteByIdsFun(): FunSpec {
-        val builder = FunSpec.builder("deleteByIds")
+        val builder = FunSpec.builder("deleteById")
             .addKdoc("根据[ids]列表删除数据")
             .addParameter("ids", List::class.parameterizedBy(Int::class))
             .returns(Int::class)
@@ -148,4 +167,14 @@ class DaoClassGen(private val classDefinition: ClassDefinition) {
             .addStatement("return result")
         return builder.build()
     }
+
+    private fun exampleBuildFun(): FunSpec {
+        return FunSpec.builder("exampleBuild")
+            .addKdoc("通过[model]辅助类构建example类")
+            .addParameter(modelVar, modelSupport)
+            .returns(JimmerMember.kExample.parameterizedBy(model))
+            .addStatement("return %M(model.toDbModel())", JimmerMember.exampleFun)
+            .build()
+    }
+
 }
