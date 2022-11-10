@@ -21,7 +21,7 @@ class DaoClassGen(private val classDefinition: ClassDefinition) {
     private val idTypeName = classDefinition.fields
         .first { it.isPrimaryKey }
         .typeName
-    val idKtType = IdType.idType(idTypeName)
+    private val idKtType = IdType.idType(idTypeName)
     fun buildDataClass(): FileSpec {
         val typeSpec = TypeSpec.classBuilder(classDefinition.daoClassName)
             .addModifiers(KModifier.ABSTRACT)
