@@ -1,6 +1,8 @@
 package llh4github.jimmer.core.model
 
 import com.squareup.kotlinpoet.ClassName
+import kotlin.reflect.KClass
+import kotlin.reflect.jvm.internal.impl.resolve.constants.KClassValue
 
 /**
  *

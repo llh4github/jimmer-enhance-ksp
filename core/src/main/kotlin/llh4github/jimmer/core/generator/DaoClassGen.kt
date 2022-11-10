@@ -3,6 +3,7 @@ package llh4github.jimmer.core.generator
 import com.squareup.kotlinpoet.*
 import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.parameterizedBy
 import llh4github.jimmer.core.model.ClassDefinition
+import llh4github.jimmer.core.util.IdType
 import llh4github.jimmer.core.util.JimmerMember
 
 /**
@@ -17,6 +18,10 @@ class DaoClassGen(private val classDefinition: ClassDefinition) {
     private val modelSupport = ClassName(classDefinition.packageName, classDefinition.supportClassName)
     private val model = ClassName(classDefinition.packageName, classDefinition.className)
     private val modelVar = "model"
+    private val idTypeName = classDefinition.fields
+        .first { it.isPrimaryKey }
+        .typeName
+    val idKtType = IdType.idType(idTypeName)
     fun buildDataClass(): FileSpec {
         val typeSpec = TypeSpec.classBuilder(classDefinition.daoClassName)
             .addModifiers(KModifier.ABSTRACT)
@@ -128,7 +133,7 @@ class DaoClassGen(private val classDefinition: ClassDefinition) {
     private fun getByIdFun(): FunSpec {
         val builder = FunSpec.builder("getById")
             .addKdoc("根据[id]列表查询数据")
-            .addParameter("id", Int::class)
+            .addParameter("id", idKtType)
             .returns(model.copy(true))
             .addStatement("return db.entities.findById(%T::class,id)", model)
         return builder.build()
@@ -137,7 +142,7 @@ class DaoClassGen(private val classDefinition: ClassDefinition) {
     private fun getByIdsFun(): FunSpec {
         val builder = FunSpec.builder("getById")
             .addKdoc("根据[ids]列表查询数据")
-            .addParameter("ids", List::class.parameterizedBy(Int::class))
+            .addParameter("ids", List::class.parameterizedBy(idKtType))
             .addStatement("return db.entities.findByIds(%T::class,ids)", model)
         return builder.build()
     }
@@ -145,7 +150,7 @@ class DaoClassGen(private val classDefinition: ClassDefinition) {
     private fun deleteByIdsFun(): FunSpec {
         val builder = FunSpec.builder("deleteById")
             .addKdoc("根据[ids]列表删除数据")
-            .addParameter("ids", List::class.parameterizedBy(Int::class))
+            .addParameter("ids", List::class.parameterizedBy(idKtType))
             .returns(Int::class)
             .addStatement("val result = db.createDelete(%T::class){", model)
             .addStatement("where(table.id %M ids )", JimmerMember.valueInFun)
@@ -158,7 +163,7 @@ class DaoClassGen(private val classDefinition: ClassDefinition) {
     private fun deleteByIdFun(): FunSpec {
         val builder = FunSpec.builder("deleteById")
             .addKdoc("根据[id]列表删除数据")
-            .addParameter("id", Int::class)
+            .addParameter("id", idKtType)
             .returns(Int::class)
             .addStatement("val result = db.createDelete(%T::class){", model)
             .addStatement("where(table.id eq id )")
