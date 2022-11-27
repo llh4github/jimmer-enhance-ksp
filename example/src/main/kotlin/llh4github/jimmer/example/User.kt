@@ -1,9 +1,6 @@
 package llh4github.jimmer.example
 
-import org.babyfish.jimmer.sql.Entity
-import org.babyfish.jimmer.sql.GeneratedValue
-import org.babyfish.jimmer.sql.Id
-import org.babyfish.jimmer.sql.OneToOne
+import org.babyfish.jimmer.sql.*
 
 /**
  *
@@ -19,6 +16,10 @@ interface User {
 
     val name: String
 
-    @OneToOne(mappedBy = "user")
-    val role: Role?
+    @OneToOne(mappedBy = "address")
+    val address: Address?
+
+    @ManyToMany
+    @JoinTable(name = "link_user_role", joinColumnName = "user_id", inverseJoinColumnName = "role_id")
+    val roles: List<Role>
 }

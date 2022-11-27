@@ -2,7 +2,6 @@ package llh4github.jimmer.core.util
 
 import com.squareup.kotlinpoet.ClassName
 import com.squareup.kotlinpoet.MemberName
-import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.parameterizedBy
 import org.babyfish.jimmer.sql.*
 import kotlin.reflect.KClass
 
@@ -40,12 +39,16 @@ object JimmerMember {
 /**
  * 关系映射注解
  */
-//val relationAnnoList = listOf(Jimmer.manyToOne, Jimmer.manyToMany, Jimmer.oneToOne, Jimmer.oneTyMany)
+val relationAnnoList =
+    listOf(JimmerAnno.manyToOne, JimmerAnno.manyToMany, JimmerAnno.oneToOne, JimmerAnno.oneTyMany)
+val relationListAnnoList =
+    listOf(JimmerAnno.manyToMany)
+
 /**
  * 下列注解暂时不生成对应字段
  */
 val ignoreAnnoList =
-    listOf(JimmerAnno.manyToOne, JimmerAnno.manyToMany, JimmerAnno.oneToOne, JimmerAnno.oneTyMany, JimmerAnno.transient)
+    listOf(JimmerAnno.transient)
 
 object IdType {
     val intKey = Int::class

@@ -1,6 +1,7 @@
 package llh4github.jimmer.core.generator
 
 import com.squareup.kotlinpoet.*
+import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.parameterizedBy
 import llh4github.jimmer.core.model.ClassDefinition
 import llh4github.jimmer.core.util.JimmerMember
 
@@ -17,16 +18,33 @@ class DataClassGen(private val classDefinition: ClassDefinition) {
         val constructorFun = FunSpec.constructorBuilder()
         val propertyList = mutableListOf<PropertySpec>()
         classDefinition.fields.forEach {
-            val type = ClassName(it.typePackage, it.typeName).copy(true)
-            val propertySpec = PropertySpec.builder(it.name, type)
-                .mutable(true)
-                .initializer(it.name)
-                .build()
-            propertyList.add(propertySpec)
+            val type = if (it.isList) {
+                ClassName(it.typePackage, it.typeName)
+                    .parameterizedBy(ClassName(it.typeParamPkgStr!!, it.typeParamTypeName!!))
+            } else {
+                ClassName(it.typePackage, it.typeName).copy(true)
+            }
+            val defaultValue = if (it.isList) {
+                "emptyList()"
+            } else {
+                "null"
+            }
+            val propertySpec = if (it.isList) {
+                PropertySpec.builder(it.name, type)
+                    .mutable(true)
+                    .initializer(it.name)
+                    .build()
+            } else {
+                PropertySpec.builder(it.name, type)
+                    .mutable(true)
+                    .initializer(it.name)
+                    .build()
+            }
 
+            propertyList.add(propertySpec)
             constructorFun.addParameter(
                 ParameterSpec.builder(it.name, type)
-                    .defaultValue("null")
+                    .defaultValue(defaultValue)
                     .build()
             )
         }
@@ -63,7 +81,11 @@ class DataClassGen(private val classDefinition: ClassDefinition) {
             .addCode("return ")
             .addStatement("%M(%L::class).by{", newFun, classDefinition.className)
         classDefinition.fields.forEach {
-            addStatement.addStatement("this@%L.%L?.let{", classDefinition.supportClassName, it.name)
+            if (it.isList) {
+                return@forEach
+            }
+            addStatement
+                .addStatement("this@%L.%L?.let{", classDefinition.supportClassName, it.name)
                 .addStatement("%L = it", it.name)
                 .addStatement("}")
         }

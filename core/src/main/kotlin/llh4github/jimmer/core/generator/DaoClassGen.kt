@@ -66,7 +66,7 @@ class DaoClassGen(private val classDefinition: ClassDefinition) {
             .addCode("return db.createUpdate(%L::class){", classDefinition.className)
             .addCode("\n")
         classDefinition.fields.forEach {
-            if (!it.isPrimaryKey) {
+            if (!it.isPrimaryKey && !it.isRelationField) {
                 funSpec.beginControlFlow("if(model.%L != null)", it.name)
                     .addStatement("set(table.%L , model.%L!!)", it.name, it.name)
                     .endControlFlow()
@@ -75,7 +75,8 @@ class DaoClassGen(private val classDefinition: ClassDefinition) {
         classDefinition.fields
             .filter { it.isPrimaryKey }
             .forEach {
-                funSpec.addStatement("where(table.%L %M model.%L!!)", it.name, JimmerMember.eqFun, it.name)
+                if (!it.isRelationField)
+                    funSpec.addStatement("where(table.%L %M model.%L!!)", it.name, JimmerMember.eqFun, it.name)
             }
         funSpec.addCode("}.execute()")
         TypeSpec.companionObjectBuilder()
@@ -92,9 +93,10 @@ class DaoClassGen(private val classDefinition: ClassDefinition) {
             .addStatement("val result = $dbVar.entities.save(")
             .addStatement("%M(%T::class).by{", JimmerMember.newFun, model)
         classDefinition.fields.forEach {
-            builder.beginControlFlow("if(model.%L != null)", it.name)
-                .addStatement("%L = model.%L!!", it.name, it.name)
-                .endControlFlow()
+            if (!it.isRelationField)
+                builder.beginControlFlow("if(model.%L != null)", it.name)
+                    .addStatement("%L = model.%L!!", it.name, it.name)
+                    .endControlFlow()
         }
         builder.addStatement("}")
         val funSpec = builder
@@ -114,9 +116,10 @@ class DaoClassGen(private val classDefinition: ClassDefinition) {
             .addStatement("val result = $dbVar.entities.save(")
             .addStatement("%M(%T::class).by{", JimmerMember.newFun, model)
         classDefinition.fields.forEach {
-            builder.beginControlFlow("if(model.%L != null)", it.name)
-                .addStatement("%L = model.%L!!", it.name, it.name)
-                .endControlFlow()
+            if (!it.isRelationField)
+                builder.beginControlFlow("if(model.%L != null)", it.name)
+                    .addStatement("%L = model.%L!!", it.name, it.name)
+                    .endControlFlow()
         }
         builder.addStatement("}")
         val funSpec = builder

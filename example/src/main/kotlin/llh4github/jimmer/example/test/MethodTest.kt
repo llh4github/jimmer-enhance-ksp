@@ -14,9 +14,7 @@ class MethodTest {
 
     fun a() {
         new(User::class).by {
-            role().apply {
-                id
-            }
+
         }
     }
 }

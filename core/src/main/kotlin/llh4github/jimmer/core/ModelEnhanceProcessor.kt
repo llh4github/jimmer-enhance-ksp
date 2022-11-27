@@ -6,10 +6,7 @@ import com.google.devtools.ksp.processing.Dependencies
 import com.google.devtools.ksp.processing.KSPLogger
 import com.google.devtools.ksp.processing.Resolver
 import com.google.devtools.ksp.processing.SymbolProcessor
-import com.google.devtools.ksp.symbol.KSAnnotated
-import com.google.devtools.ksp.symbol.KSClassDeclaration
-import com.google.devtools.ksp.symbol.KSPropertyDeclaration
-import com.google.devtools.ksp.symbol.KSType
+import com.google.devtools.ksp.symbol.*
 import com.squareup.kotlinpoet.FileSpec
 import com.squareup.kotlinpoet.ksp.toTypeName
 import llh4github.jimmer.core.generator.DaoClassGen
@@ -17,10 +14,7 @@ import llh4github.jimmer.core.generator.DataClassGen
 import llh4github.jimmer.core.model.ClassDefinition
 import llh4github.jimmer.core.model.ContextGen
 import llh4github.jimmer.core.model.FieldDefinition
-import llh4github.jimmer.core.util.JimmerAnno
-import llh4github.jimmer.core.util.hasAnno
-import llh4github.jimmer.core.util.hasAnyAnno
-import llh4github.jimmer.core.util.ignoreAnnoList
+import llh4github.jimmer.core.util.*
 import org.jetbrains.kotlin.konan.file.use
 import java.util.concurrent.atomic.AtomicBoolean
 
@@ -74,24 +68,34 @@ class ModelEnhanceProcessor(private val context: ContextGen) : SymbolProcessor {
     }
 
     private fun parseFieldDefinition(properties: Sequence<KSPropertyDeclaration>): List<FieldDefinition> {
-        return properties.filter { !it.annotations.hasAnyAnno(ignoreAnnoList) }
+        return properties
+            .filter { !it.annotations.hasAnyAnno(ignoreAnnoList) }
             .map {
                 parseFieldDefinition(it)
-            }.toList()
+            }
+//            .filter { null != it }
+//            .map { it!! }
+            .toList()
     }
 
     private fun parseFieldDefinition(property: KSPropertyDeclaration): FieldDefinition {
         val fieldName = property.simpleName.asString()
-
         val isPrimaryKey = property.annotations.hasAnno(JimmerAnno.id)
         val doc = property.docString
         val tyName = property.type.resolve().declaration.simpleName.asString()
         val typePackage = property.type.resolve().declaration.packageName.asString()
 
+        val isRelation = property.annotations.hasAnyAnno(relationAnnoList)
         val complexTypeStr = if (property.type.resolve().isComplexType()) {
             property.type.toTypeName().toString()
         } else {
             null
+        }
+        var isList = false
+        var arg: KSTypeArgument? = null
+        if ("$typePackage.$tyName" == "kotlin.collections.List") {
+            isList = true
+            arg = property.type.resolve().arguments[0]
         }
         return FieldDefinition(
             name = fieldName,
@@ -99,6 +103,10 @@ class ModelEnhanceProcessor(private val context: ContextGen) : SymbolProcessor {
             typePackage = typePackage,
             complexTypeStr = complexTypeStr,
             doc = doc,
+            isRelationField = isRelation,
+            isList = isList,
+            typeParamPkgStr = arg?.typePkg(),
+            typeParamTypeName = arg?.typeName(),
             isPrimaryKey = isPrimaryKey
         )
 

@@ -2,6 +2,8 @@ package llh4github.jimmer.example
 
 import org.babyfish.jimmer.sql.Entity
 import org.babyfish.jimmer.sql.Id
+import org.babyfish.jimmer.sql.JoinTable
+import org.babyfish.jimmer.sql.ManyToMany
 
 /**
  *
@@ -16,4 +18,6 @@ interface Role {
 
     val name: String
 
+    @ManyToMany(mappedBy = "roles")
+    val users: List<User>
 }
