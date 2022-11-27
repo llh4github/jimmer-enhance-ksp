@@ -28,9 +28,13 @@ object JimmerMember {
     val saveMode = ClassName("org.babyfish.jimmer.sql.ast.mutation", "SaveMode")
 
     val valueInFun = MemberName("org.babyfish.jimmer.sql.kt.ast.expression", "valueIn")
-    fun byFunc(draftClass: String): ClassName {
-        return ClassName(draftClass, "by")
-    }
+//    fun byFunc(draftClass: String): ClassName {
+//        return ClassName(draftClass, "by")
+//    }
+//
+//    fun addByFun(draftClass: String): ClassName {
+//        return ClassName(draftClass, "addBy")
+//    }
 
     val kExample = ClassName("org.babyfish.jimmer.sql.kt.ast.query", "KExample")
     val exampleFun = MemberName("org.babyfish.jimmer.sql.kt.ast.query", "example")

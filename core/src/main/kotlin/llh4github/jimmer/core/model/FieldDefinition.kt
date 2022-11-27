@@ -51,6 +51,7 @@ data class FieldDefinition(
 ) {
     val isComplexType = complexTypeStr != null
 
+    val typeParamTypeSupportName: String? = if (null != typeParamTypeName) "${typeParamTypeName}Support" else null
     val typeParamQualifier: String = "$typeParamTypeName.$typeParamTypeName"
     fun toClassName(): ClassName {
         return ClassName(typePackage, typeName)

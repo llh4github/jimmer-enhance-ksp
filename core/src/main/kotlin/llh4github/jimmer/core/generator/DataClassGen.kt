@@ -18,9 +18,12 @@ class DataClassGen(private val classDefinition: ClassDefinition) {
         val constructorFun = FunSpec.constructorBuilder()
         val propertyList = mutableListOf<PropertySpec>()
         classDefinition.fields.forEach {
-            val type = if (it.isList) {
-                ClassName(it.typePackage, it.typeName)
-                    .parameterizedBy(ClassName(it.typeParamPkgStr!!, it.typeParamTypeName!!))
+            val type = if (it.isRelationField) {
+                if (it.isList)
+                    ClassName(it.typePackage, it.typeName)
+                        .parameterizedBy(ClassName(it.typeParamPkgStr!!, it.typeParamTypeSupportName!!))
+                else
+                    ClassName(it.typePackage, it.typeName + "Support").copy(true)
             } else {
                 ClassName(it.typePackage, it.typeName).copy(true)
             }
@@ -75,13 +78,13 @@ class DataClassGen(private val classDefinition: ClassDefinition) {
         val newFun = JimmerMember.newFun
         val model = ClassName(classDefinition.packageName, classDefinition.className)
         val addStatement = FunSpec.builder("toDbModel")
-            .addKdoc("转换为数据库模型类（Jimmer框架）\n")
-            .addKdoc("仅转换非空字段")
+            .addKdoc("转换为数据库模型类（Jimmer框架）。")
+            .addKdoc("仅转换非空字段和当前表的字段")
             .returns(model)
             .addCode("return ")
             .addStatement("%M(%L::class).by{", newFun, classDefinition.className)
         classDefinition.fields.forEach {
-            if (it.isList) {
+            if (it.isRelationField) {
                 return@forEach
             }
             addStatement

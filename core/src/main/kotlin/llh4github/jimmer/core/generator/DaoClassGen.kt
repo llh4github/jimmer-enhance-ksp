@@ -3,6 +3,7 @@ package llh4github.jimmer.core.generator
 import com.squareup.kotlinpoet.*
 import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.parameterizedBy
 import llh4github.jimmer.core.model.ClassDefinition
+import llh4github.jimmer.core.model.FieldDefinition
 import llh4github.jimmer.core.util.IdType
 import llh4github.jimmer.core.util.JimmerMember
 
@@ -54,9 +55,24 @@ class DaoClassGen(private val classDefinition: ClassDefinition) {
             .addImport(classDefinition.packageName, classDefinition.className)
             .addImport(classDefinition.packageName, fieldNames)
             .addImport(classDefinition.packageName, "by")
+            .addImport(classDefinition.packageName, "addBy")
             .build()
     }
 
+    private fun setRelationField(field: FieldDefinition, funSpec: FunSpec.Builder) {
+        if (!field.isRelationField) {
+            return
+        }
+        if (field.isList) {
+            funSpec.addStatement("model.%L.forEach{", field.name)
+                .addStatement("%L().addBy{it.toDbModel()}", field.name)
+                .addStatement("}")
+        } else {
+            funSpec
+                .addStatement("if(model.%L!=null)", field.name)
+                .addStatement("%L().apply{model.%L!!.toDbModel()}", field.name, field.name)
+        }
+    }
 
     private fun updateByIdFun(): FunSpec {
         val funSpec = FunSpec.builder("updateByIdSupport")
@@ -120,6 +136,7 @@ class DaoClassGen(private val classDefinition: ClassDefinition) {
                 builder.beginControlFlow("if(model.%L != null)", it.name)
                     .addStatement("%L = model.%L!!", it.name, it.name)
                     .endControlFlow()
+            setRelationField(it, builder)
         }
         builder.addStatement("}")
         val funSpec = builder
