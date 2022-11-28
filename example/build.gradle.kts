@@ -19,7 +19,8 @@ dependencies {
     implementation("org.springframework.boot:spring-boot-starter-web")
     implementation("com.fasterxml.jackson.module:jackson-module-kotlin")
     testImplementation("org.springframework.boot:spring-boot-starter-test")
-
+    implementation("org.springframework.boot:spring-boot-starter-data-jdbc")
+    implementation("org.apache.logging.log4j:log4j-api-kotlin:1.2.0")
 }
 kotlin {
     sourceSets.main {
