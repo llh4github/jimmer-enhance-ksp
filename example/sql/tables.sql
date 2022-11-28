@@ -1,3 +1,4 @@
+
 /*
  Navicat Premium Data Transfer
 
@@ -12,7 +13,7 @@
  Target Server Version : 140005
  File Encoding         : 65001
 
- Date: 28/11/2022 15:06:14
+ Date: 28/11/2022 15:50:30
 */
 
 
@@ -21,44 +22,44 @@
 -- ----------------------------
 DROP SEQUENCE IF EXISTS "public"."author_id_seq";
 CREATE SEQUENCE "public"."author_id_seq"
-INCREMENT 1
-MINVALUE  1
-MAXVALUE 2147483647
-START 1
-CACHE 1;
+    INCREMENT 1
+    MINVALUE  1
+    MAXVALUE 2147483647
+    START 1
+    CACHE 1;
 
 -- ----------------------------
 -- Sequence structure for book_author_link_id_seq
 -- ----------------------------
 DROP SEQUENCE IF EXISTS "public"."book_author_link_id_seq";
 CREATE SEQUENCE "public"."book_author_link_id_seq"
-INCREMENT 1
-MINVALUE  1
-MAXVALUE 2147483647
-START 1
-CACHE 1;
+    INCREMENT 1
+    MINVALUE  1
+    MAXVALUE 2147483647
+    START 1
+    CACHE 1;
 
 -- ----------------------------
 -- Sequence structure for book_id_seq
 -- ----------------------------
 DROP SEQUENCE IF EXISTS "public"."book_id_seq";
 CREATE SEQUENCE "public"."book_id_seq"
-INCREMENT 1
-MINVALUE  1
-MAXVALUE 2147483647
-START 1
-CACHE 1;
+    INCREMENT 1
+    MINVALUE  1
+    MAXVALUE 2147483647
+    START 1
+    CACHE 1;
 
 -- ----------------------------
 -- Sequence structure for book_store_id_seq
 -- ----------------------------
 DROP SEQUENCE IF EXISTS "public"."book_store_id_seq";
 CREATE SEQUENCE "public"."book_store_id_seq"
-INCREMENT 1
-MINVALUE  1
-MAXVALUE 2147483647
-START 1
-CACHE 1;
+    INCREMENT 1
+    MINVALUE  1
+    MAXVALUE 2147483647
+    START 1
+    CACHE 1;
 
 -- ----------------------------
 -- Table structure for author
@@ -66,8 +67,8 @@ CACHE 1;
 DROP TABLE IF EXISTS "public"."author";
 CREATE TABLE "public"."author" (
                                    "id" int4 NOT NULL DEFAULT nextval('author_id_seq'::regclass),
-                                   "first_name" varchar(255) COLLATE "pg_catalog"."default" NOT NULL,
-                                   "last_name" varchar(255) COLLATE "pg_catalog"."default" NOT NULL,
+                                   "english_name" varchar(255) COLLATE "pg_catalog"."default" NOT NULL,
+                                   "chinese_name" varchar(255) COLLATE "pg_catalog"."default" NOT NULL,
                                    "gender" int2 NOT NULL
 )
 ;
@@ -82,7 +83,7 @@ CREATE TABLE "public"."book" (
                                  "name" varchar(255) COLLATE "pg_catalog"."default",
                                  "edition" int2,
                                  "price" numeric(10,2) NOT NULL,
-                                 "store_id" int4 NOT NULL
+                                 "store_id" int4
 )
 ;
 
@@ -112,28 +113,28 @@ CREATE TABLE "public"."book_store" (
 -- Alter sequences owned by
 -- ----------------------------
 ALTER SEQUENCE "public"."author_id_seq"
-OWNED BY "public"."author"."id";
-SELECT setval('"public"."author_id_seq"', 1, false);
+    OWNED BY "public"."author"."id";
+SELECT setval('"public"."author_id_seq"', 1, true);
 
 -- ----------------------------
 -- Alter sequences owned by
 -- ----------------------------
 ALTER SEQUENCE "public"."book_author_link_id_seq"
-OWNED BY "public"."book_author_link"."id";
+    OWNED BY "public"."book_author_link"."id";
 SELECT setval('"public"."book_author_link_id_seq"', 1, false);
 
 -- ----------------------------
 -- Alter sequences owned by
 -- ----------------------------
 ALTER SEQUENCE "public"."book_id_seq"
-OWNED BY "public"."book"."id";
-SELECT setval('"public"."book_id_seq"', 1, true);
+    OWNED BY "public"."book"."id";
+SELECT setval('"public"."book_id_seq"', 4, true);
 
 -- ----------------------------
 -- Alter sequences owned by
 -- ----------------------------
 ALTER SEQUENCE "public"."book_store_id_seq"
-OWNED BY "public"."book_store"."id";
+    OWNED BY "public"."book_store"."id";
 SELECT setval('"public"."book_store_id_seq"', 1, false);
 
 -- ----------------------------

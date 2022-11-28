@@ -13,6 +13,7 @@ import java.math.BigDecimal
 interface Book {
 
     @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     val id: Long
 
     @Key

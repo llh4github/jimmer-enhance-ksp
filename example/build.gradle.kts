@@ -16,6 +16,7 @@ dependencies {
     ksp(libs.jimmer.ksp)
     ksp(project(":core"))
 
+    testImplementation("com.apifan.common:common-random:1.0.18")
     implementation("org.springframework.boot:spring-boot-starter-web")
     implementation("com.fasterxml.jackson.module:jackson-module-kotlin")
     testImplementation("org.springframework.boot:spring-boot-starter-test")

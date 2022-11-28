@@ -1,10 +1,6 @@
 package llh4github.jimmer.example.model
 
-import org.babyfish.jimmer.sql.Entity
-import org.babyfish.jimmer.sql.Id
-import org.babyfish.jimmer.sql.Key
-import org.babyfish.jimmer.sql.ManyToMany
-import org.babyfish.jimmer.sql.Table
+import org.babyfish.jimmer.sql.*
 
 /**
  *
@@ -15,13 +11,14 @@ import org.babyfish.jimmer.sql.Table
 @Table(name = "author")
 interface Author {
     @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     val id: Long
 
     @Key
-    val firstName: String
+    val englishName: String
 
     @Key
-    val lastName: String
+    val chineseName: String
 
     val gender: Int
 
