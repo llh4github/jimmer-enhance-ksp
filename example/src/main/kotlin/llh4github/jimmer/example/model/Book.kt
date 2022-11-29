@@ -14,7 +14,7 @@ interface Book {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    val id: Long
+    val id: Int
 
     @Key
     val name: String

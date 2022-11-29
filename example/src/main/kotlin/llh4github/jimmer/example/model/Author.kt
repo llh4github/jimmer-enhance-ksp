@@ -12,7 +12,7 @@ import org.babyfish.jimmer.sql.*
 interface Author {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    val id: Long
+    val id: Int
 
     @Key
     val englishName: String
