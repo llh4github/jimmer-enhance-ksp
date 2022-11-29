@@ -65,7 +65,7 @@ class DataClassGen(private val classDefinition: ClassDefinition) {
                     .addProperties(propertyList)
                     .primaryConstructor(primaryConstructor)
                     .addFunction(toModelFun(classDefinition))
-                    .addFunction(applyFunc(classDefinition))
+                    .addFunction(fillDraftFunc(classDefinition))
 //                    .addType(
 //                        TypeSpec.companionObjectBuilder()
 //                            .addFunction(updateByIdFun(classDefinition))
@@ -97,10 +97,10 @@ class DataClassGen(private val classDefinition: ClassDefinition) {
         return funSpec.build()
     }
 
-    private fun applyFunc(classDefinition: ClassDefinition): FunSpec {
+    private fun fillDraftFunc(classDefinition: ClassDefinition): FunSpec {
         val draft = ClassName(classDefinition.packageName, classDefinition.draftClassName)
-        val addStatement = FunSpec.builder("applyFunc")
-            .addKdoc("转换为数据库模型类（Jimmer框架）。")
+        val addStatement = FunSpec.builder("fillDraft")
+            .addKdoc("填充Draft对象实例。")
             .addKdoc("仅转换非空字段和当前表的字段")
             .addParameter("draft", draft)
         classDefinition.fields.forEach {
@@ -114,8 +114,9 @@ class DataClassGen(private val classDefinition: ClassDefinition) {
         }
         val funSpec = addStatement
         return funSpec.build()
-
     }
+
+
 
     @Deprecated("此方法转移到dao层辅助类中实现")
     private fun updateByIdFun(classDefinition: ClassDefinition): FunSpec {

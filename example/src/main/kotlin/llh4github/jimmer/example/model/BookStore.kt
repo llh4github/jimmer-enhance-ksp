@@ -17,7 +17,7 @@ interface BookStore {
     @Key
     val name: String
 
-    val website: String?
+    val webSite: String?
 
     @OneToMany(mappedBy = "store")
     val books: List<Book>

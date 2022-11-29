@@ -1,10 +1,12 @@
 package llh4github.jimmer.example.jimmer
 
-import org.babyfish.jimmer.sql.ast.mutation.SaveMode
-import org.babyfish.jimmer.sql.kt.KSqlClient
+import llh4github.jimmer.example.dao.BookDao
+import llh4github.jimmer.example.model.BookStoreSupport
+import llh4github.jimmer.example.model.BookSupport
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
+import java.math.BigDecimal
 
 /**
  *
@@ -15,19 +17,24 @@ import org.springframework.boot.test.context.SpringBootTest
 class EnhanceKspTest : BaseTest() {
 
     @Autowired
-    private lateinit var db: KSqlClient
+    private lateinit var bookDao: BookDao
+
 
     @Test
-    fun save() {
-        db.entities.save(
-            randomBook().toDbModel()
-        ) {
-            setMode(SaveMode.INSERT_ONLY)
-        }
-        db.entities.save(
-            randomAuthor().toDbModel()
-        ) {
-            setMode(SaveMode.INSERT_ONLY)
-        }
+    fun saveRelation() {
+        val storeSupport = BookStoreSupport(
+            name = "Test Store2",
+            webSite = "a.b.c.html"
+        )
+        val book = BookSupport(
+            name = "Good Book",
+            edition = 3,
+            price = BigDecimal(3.4),
+            store = storeSupport
+        )
+        val authorList = listOf(randomAuthor(), randomAuthor())
+        book.authors = authorList
+
+        bookDao.insertRelationBySupport(book)
     }
 }

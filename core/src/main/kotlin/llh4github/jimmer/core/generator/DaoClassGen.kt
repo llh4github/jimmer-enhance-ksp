@@ -40,6 +40,7 @@ class DaoClassGen(private val classDefinition: ClassDefinition) {
                     addMember("\"Unused\"")
                 }
                 .build())
+            .addFunction(insertRelationBySupportFun())
             .addFunction(insertBySupportFun())
             .addFunction(upsertBySupportFun())
             .addFunction(updateByIdFun())
@@ -65,12 +66,13 @@ class DaoClassGen(private val classDefinition: ClassDefinition) {
         }
         if (field.isList) {
             funSpec.addStatement("model.%L.forEach{", field.name)
-                .addStatement("%L().addBy{it.toDbModel()}", field.name)
+                .addStatement("%L().addBy{it.fillDraft(this)}", field.name)
                 .addStatement("}")
         } else {
             funSpec
                 .addStatement("if(model.%L!=null)", field.name)
-                .addStatement("%L().apply{model.%L!!.toDbModel()}", field.name, field.name)
+//                .addStatement("%L().apply{model.%L!!.toDbModel()}", field.name, field.name)
+                .addStatement("model.%L!!.fillDraft(%L())", field.name, field.name)
         }
     }
 
@@ -123,6 +125,33 @@ class DaoClassGen(private val classDefinition: ClassDefinition) {
         return funSpec
     }
 
+    private fun insertRelationBySupportFun(): FunSpec {
+
+        val builder = FunSpec.builder("insertRelationBySupport")
+            .addKdoc("通过辅助类插入数据。此方法会保存关联数据。")
+            .addParameter(modelVar, modelSupport)
+            .returns(Int::class)
+            .addStatement("val result = $dbVar.entities.save(")
+            .addStatement("%M(%T::class).by{", JimmerMember.newFun, model)
+        classDefinition.fields.forEach {
+            if (!it.isRelationField)
+                builder.beginControlFlow("if(model.%L != null)", it.name)
+                    .addStatement("%L = model.%L!!", it.name, it.name)
+                    .endControlFlow()
+            setRelationField(it, builder)
+        }
+        builder.addStatement("}")
+        val funSpec = builder
+            .addStatement("){")
+            .addStatement("setAutoAttachingAll()")
+            .addStatement("}")
+            .addStatement("return result.totalAffectedRowCount")
+            .build()
+
+
+        return funSpec
+    }
+
     private fun insertBySupportFun(): FunSpec {
 
         val builder = FunSpec.builder("insertBySupport")
@@ -136,7 +165,7 @@ class DaoClassGen(private val classDefinition: ClassDefinition) {
                 builder.beginControlFlow("if(model.%L != null)", it.name)
                     .addStatement("%L = model.%L!!", it.name, it.name)
                     .endControlFlow()
-            setRelationField(it, builder)
+//            setRelationField(it, builder)
         }
         builder.addStatement("}")
         val funSpec = builder
