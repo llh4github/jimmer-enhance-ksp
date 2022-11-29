@@ -65,6 +65,7 @@ class DataClassGen(private val classDefinition: ClassDefinition) {
                     .addProperties(propertyList)
                     .primaryConstructor(primaryConstructor)
                     .addFunction(toModelFun(classDefinition))
+                    .addFunction(applyFunc(classDefinition))
 //                    .addType(
 //                        TypeSpec.companionObjectBuilder()
 //                            .addFunction(updateByIdFun(classDefinition))
@@ -93,6 +94,25 @@ class DataClassGen(private val classDefinition: ClassDefinition) {
                 .addStatement("}")
         }
         val funSpec = addStatement.addStatement("}")
+        return funSpec.build()
+    }
+
+    private fun applyFunc(classDefinition: ClassDefinition): FunSpec {
+        val draft = ClassName(classDefinition.packageName, classDefinition.draftClassName)
+        val addStatement = FunSpec.builder("applyFunc")
+            .addKdoc("转换为数据库模型类（Jimmer框架）。")
+            .addKdoc("仅转换非空字段和当前表的字段")
+            .addParameter("draft", draft)
+        classDefinition.fields.forEach {
+            if (it.isRelationField) {
+                return@forEach
+            }
+            addStatement
+                .addCode("this@%L.%L?.let{", classDefinition.supportClassName, it.name)
+                .addCode("draft.%L = it", it.name)
+                .addCode("};")
+        }
+        val funSpec = addStatement
         return funSpec.build()
 
     }
