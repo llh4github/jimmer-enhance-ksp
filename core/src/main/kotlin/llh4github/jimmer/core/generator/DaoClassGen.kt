@@ -128,7 +128,7 @@ class DaoClassGen(private val classDefinition: ClassDefinition) {
     private fun insertRelationBySupportFun(): FunSpec {
 
         val builder = FunSpec.builder("insertRelationBySupport")
-            .addKdoc("通过辅助类插入数据。此方法会保存关联数据。")
+            .addKdoc("通过辅助类插入数据。保存关联数据。")
             .addParameter(modelVar, modelSupport)
             .returns(Int::class)
             .addStatement("val result = $dbVar.entities.save(")
