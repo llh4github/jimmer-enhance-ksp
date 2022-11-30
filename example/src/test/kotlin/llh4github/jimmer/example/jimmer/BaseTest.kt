@@ -1,9 +1,11 @@
 package llh4github.jimmer.example.jimmer
 
+import com.apifan.common.random.source.InternetSource
 import com.apifan.common.random.source.NumberSource
 import com.apifan.common.random.source.OtherSource
 import com.apifan.common.random.source.PersonInfoSource
 import llh4github.jimmer.example.model.AuthorSupport
+import llh4github.jimmer.example.model.BookStoreSupport
 import llh4github.jimmer.example.model.BookSupport
 import java.math.BigDecimal
 import java.math.RoundingMode
@@ -14,6 +16,13 @@ import java.math.RoundingMode
  * @author llh
  */
 abstract class BaseTest {
+
+    fun randomBookStore(): BookStoreSupport {
+        return BookStoreSupport(
+            name = OtherSource.getInstance().randomChinese(4),
+            webSite = InternetSource.getInstance().randomStaticUrl("html")
+        )
+    }
 
     fun randomBook(): BookSupport {
         val price = NumberSource.getInstance().randomDouble(0.0, 1000.0)
