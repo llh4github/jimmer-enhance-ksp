@@ -3,6 +3,7 @@ package llh4github.jimmer.core.util
 import com.squareup.kotlinpoet.ClassName
 import com.squareup.kotlinpoet.MemberName
 import org.babyfish.jimmer.sql.*
+import kotlin.reflect.KClass
 
 /**
  * jimmer 框架中的常用注解
@@ -26,21 +27,44 @@ object JimmerMember {
     val ktSqlClient = ClassName("org.babyfish.jimmer.sql.kt", "KSqlClient")
     val saveMode = ClassName("org.babyfish.jimmer.sql.ast.mutation", "SaveMode")
 
-    val valueInFun = MemberName("org.babyfish.jimmer.sql.kt.ast.expression","valueIn")
-    fun byFunc(draftClass: String): ClassName {
-        return ClassName(draftClass, "by")
-    }
+    val valueInFun = MemberName("org.babyfish.jimmer.sql.kt.ast.expression", "valueIn")
+//    fun byFunc(draftClass: String): ClassName {
+//        return ClassName(draftClass, "by")
+//    }
+//
+//    fun addByFun(draftClass: String): ClassName {
+//        return ClassName(draftClass, "addBy")
+//    }
 
-    val kExample = ClassName("org.babyfish.jimmer.sql.kt.ast.query","KExample")
-    val exampleFun = MemberName("org.babyfish.jimmer.sql.kt.ast.query","example")
+    val kExample = ClassName("org.babyfish.jimmer.sql.kt.ast.query", "KExample")
+    val exampleFun = MemberName("org.babyfish.jimmer.sql.kt.ast.query", "example")
 }
 
 /**
  * 关系映射注解
  */
-//val relationAnnoList = listOf(Jimmer.manyToOne, Jimmer.manyToMany, Jimmer.oneToOne, Jimmer.oneTyMany)
+val relationAnnoList =
+    listOf(JimmerAnno.manyToOne, JimmerAnno.manyToMany, JimmerAnno.oneToOne, JimmerAnno.oneTyMany)
+val relationListAnnoList =
+    listOf(JimmerAnno.manyToMany)
+
 /**
  * 下列注解暂时不生成对应字段
  */
 val ignoreAnnoList =
-    listOf(JimmerAnno.manyToOne, JimmerAnno.manyToMany, JimmerAnno.oneToOne, JimmerAnno.oneTyMany, JimmerAnno.transient)
+    listOf(JimmerAnno.transient)
+
+object IdType {
+    val intKey = Int::class
+    val longKey = Long::class
+    val stringKey = String::class
+
+    fun idType(typeName: String): KClass<out Any> {
+        return when (typeName) {
+            "Int" -> intKey
+            "Long" -> longKey
+            "String" -> stringKey
+            else -> Any::class
+        }
+    }
+}

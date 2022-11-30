@@ -1,6 +1,7 @@
 package llh4github.jimmer.core.generator
 
 import com.squareup.kotlinpoet.*
+import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.parameterizedBy
 import llh4github.jimmer.core.model.ClassDefinition
 import llh4github.jimmer.core.util.JimmerMember
 
@@ -17,16 +18,36 @@ class DataClassGen(private val classDefinition: ClassDefinition) {
         val constructorFun = FunSpec.constructorBuilder()
         val propertyList = mutableListOf<PropertySpec>()
         classDefinition.fields.forEach {
-            val type = ClassName(it.typePackage, it.typeName).copy(true)
-            val propertySpec = PropertySpec.builder(it.name, type)
-                .mutable(true)
-                .initializer(it.name)
-                .build()
-            propertyList.add(propertySpec)
+            val type = if (it.isRelationField) {
+                if (it.isList)
+                    ClassName(it.typePackage, it.typeName)
+                        .parameterizedBy(ClassName(it.typeParamPkgStr!!, it.typeParamTypeSupportName!!))
+                else
+                    ClassName(it.typePackage, it.typeName + "Support").copy(true)
+            } else {
+                ClassName(it.typePackage, it.typeName).copy(true)
+            }
+            val defaultValue = if (it.isList) {
+                "emptyList()"
+            } else {
+                "null"
+            }
+            val propertySpec = if (it.isList) {
+                PropertySpec.builder(it.name, type)
+                    .mutable(true)
+                    .initializer(it.name)
+                    .build()
+            } else {
+                PropertySpec.builder(it.name, type)
+                    .mutable(true)
+                    .initializer(it.name)
+                    .build()
+            }
 
+            propertyList.add(propertySpec)
             constructorFun.addParameter(
                 ParameterSpec.builder(it.name, type)
-                    .defaultValue("null")
+                    .defaultValue(defaultValue)
                     .build()
             )
         }
@@ -44,6 +65,7 @@ class DataClassGen(private val classDefinition: ClassDefinition) {
                     .addProperties(propertyList)
                     .primaryConstructor(primaryConstructor)
                     .addFunction(toModelFun(classDefinition))
+                    .addFunction(fillDraftFunc(classDefinition))
 //                    .addType(
 //                        TypeSpec.companionObjectBuilder()
 //                            .addFunction(updateByIdFun(classDefinition))
@@ -57,20 +79,44 @@ class DataClassGen(private val classDefinition: ClassDefinition) {
         val newFun = JimmerMember.newFun
         val model = ClassName(classDefinition.packageName, classDefinition.className)
         val addStatement = FunSpec.builder("toDbModel")
-            .addKdoc("转换为数据库模型类（Jimmer框架）\n")
-            .addKdoc("仅转换非空字段")
+            .addKdoc("转换为数据库模型类（Jimmer框架）。")
+            .addKdoc("仅转换非空字段和当前表的字段")
             .returns(model)
             .addCode("return ")
             .addStatement("%M(%L::class).by{", newFun, classDefinition.className)
         classDefinition.fields.forEach {
-            addStatement.addStatement("this@%L.%L?.let{", classDefinition.supportClassName, it.name)
+            if (it.isRelationField) {
+                return@forEach
+            }
+            addStatement
+                .addStatement("this@%L.%L?.let{", classDefinition.supportClassName, it.name)
                 .addStatement("%L = it", it.name)
                 .addStatement("}")
         }
         val funSpec = addStatement.addStatement("}")
         return funSpec.build()
-
     }
+
+    private fun fillDraftFunc(classDefinition: ClassDefinition): FunSpec {
+        val draft = ClassName(classDefinition.packageName, classDefinition.draftClassName)
+        val addStatement = FunSpec.builder("fillDraft")
+            .addKdoc("填充Draft对象实例。")
+            .addKdoc("仅转换非空字段和当前表的字段")
+            .addParameter("draft", draft)
+        classDefinition.fields.forEach {
+            if (it.isRelationField) {
+                return@forEach
+            }
+            addStatement
+                .addCode("this@%L.%L?.let{", classDefinition.supportClassName, it.name)
+                .addCode("draft.%L = it", it.name)
+                .addCode("};")
+        }
+        val funSpec = addStatement
+        return funSpec.build()
+    }
+
+
 
     @Deprecated("此方法转移到dao层辅助类中实现")
     private fun updateByIdFun(classDefinition: ClassDefinition): FunSpec {

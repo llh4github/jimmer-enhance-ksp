@@ -3,6 +3,8 @@ package llh4github.jimmer.core.generator
 import com.squareup.kotlinpoet.*
 import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.parameterizedBy
 import llh4github.jimmer.core.model.ClassDefinition
+import llh4github.jimmer.core.model.FieldDefinition
+import llh4github.jimmer.core.util.IdType
 import llh4github.jimmer.core.util.JimmerMember
 
 /**
@@ -17,6 +19,10 @@ class DaoClassGen(private val classDefinition: ClassDefinition) {
     private val modelSupport = ClassName(classDefinition.packageName, classDefinition.supportClassName)
     private val model = ClassName(classDefinition.packageName, classDefinition.className)
     private val modelVar = "model"
+    private val idTypeName = classDefinition.fields
+        .first { it.isPrimaryKey }
+        .typeName
+    private val idKtType = IdType.idType(idTypeName)
     fun buildDataClass(): FileSpec {
         val typeSpec = TypeSpec.classBuilder(classDefinition.daoClassName)
             .addModifiers(KModifier.ABSTRACT)
@@ -34,6 +40,7 @@ class DaoClassGen(private val classDefinition: ClassDefinition) {
                     addMember("\"Unused\"")
                 }
                 .build())
+            .addFunction(insertRelationBySupportFun())
             .addFunction(insertBySupportFun())
             .addFunction(upsertBySupportFun())
             .addFunction(updateByIdFun())
@@ -49,9 +56,25 @@ class DaoClassGen(private val classDefinition: ClassDefinition) {
             .addImport(classDefinition.packageName, classDefinition.className)
             .addImport(classDefinition.packageName, fieldNames)
             .addImport(classDefinition.packageName, "by")
+            .addImport(classDefinition.packageName, "addBy")
             .build()
     }
 
+    private fun setRelationField(field: FieldDefinition, funSpec: FunSpec.Builder) {
+        if (!field.isRelationField) {
+            return
+        }
+        if (field.isList) {
+            funSpec.addStatement("model.%L.forEach{", field.name)
+                .addStatement("%L().addBy{it.fillDraft(this)}", field.name)
+                .addStatement("}")
+        } else {
+            funSpec
+                .addStatement("if(model.%L!=null)", field.name)
+//                .addStatement("%L().apply{model.%L!!.toDbModel()}", field.name, field.name)
+                .addStatement("model.%L!!.fillDraft(%L())", field.name, field.name)
+        }
+    }
 
     private fun updateByIdFun(): FunSpec {
         val funSpec = FunSpec.builder("updateByIdSupport")
@@ -61,7 +84,7 @@ class DaoClassGen(private val classDefinition: ClassDefinition) {
             .addCode("return db.createUpdate(%L::class){", classDefinition.className)
             .addCode("\n")
         classDefinition.fields.forEach {
-            if (!it.isPrimaryKey) {
+            if (!it.isPrimaryKey && !it.isRelationField) {
                 funSpec.beginControlFlow("if(model.%L != null)", it.name)
                     .addStatement("set(table.%L , model.%L!!)", it.name, it.name)
                     .endControlFlow()
@@ -70,7 +93,8 @@ class DaoClassGen(private val classDefinition: ClassDefinition) {
         classDefinition.fields
             .filter { it.isPrimaryKey }
             .forEach {
-                funSpec.addStatement("where(table.%L %M model.%L!!)", it.name, JimmerMember.eqFun, it.name)
+                if (!it.isRelationField)
+                    funSpec.addStatement("where(table.%L %M model.%L!!)", it.name, JimmerMember.eqFun, it.name)
             }
         funSpec.addCode("}.execute()")
         TypeSpec.companionObjectBuilder()
@@ -87,15 +111,43 @@ class DaoClassGen(private val classDefinition: ClassDefinition) {
             .addStatement("val result = $dbVar.entities.save(")
             .addStatement("%M(%T::class).by{", JimmerMember.newFun, model)
         classDefinition.fields.forEach {
-            builder.beginControlFlow("if(model.%L != null)", it.name)
-                .addStatement("%L = model.%L!!", it.name, it.name)
-                .endControlFlow()
+            if (!it.isRelationField)
+                builder.beginControlFlow("if(model.%L != null)", it.name)
+                    .addStatement("%L = model.%L!!", it.name, it.name)
+                    .endControlFlow()
         }
         builder.addStatement("}")
         val funSpec = builder
             .addStatement(")")
             .addStatement("return result.totalAffectedRowCount")
             .build()
+
+        return funSpec
+    }
+
+    private fun insertRelationBySupportFun(): FunSpec {
+
+        val builder = FunSpec.builder("insertRelationBySupport")
+            .addKdoc("通过辅助类插入数据。保存关联数据。")
+            .addParameter(modelVar, modelSupport)
+            .returns(Int::class)
+            .addStatement("val result = $dbVar.entities.save(")
+            .addStatement("%M(%T::class).by{", JimmerMember.newFun, model)
+        classDefinition.fields.forEach {
+            if (!it.isRelationField)
+                builder.beginControlFlow("if(model.%L != null)", it.name)
+                    .addStatement("%L = model.%L!!", it.name, it.name)
+                    .endControlFlow()
+            setRelationField(it, builder)
+        }
+        builder.addStatement("}")
+        val funSpec = builder
+            .addStatement("){")
+            .addStatement("setAutoAttachingAll()")
+            .addStatement("}")
+            .addStatement("return result.totalAffectedRowCount")
+            .build()
+
 
         return funSpec
     }
@@ -109,9 +161,11 @@ class DaoClassGen(private val classDefinition: ClassDefinition) {
             .addStatement("val result = $dbVar.entities.save(")
             .addStatement("%M(%T::class).by{", JimmerMember.newFun, model)
         classDefinition.fields.forEach {
-            builder.beginControlFlow("if(model.%L != null)", it.name)
-                .addStatement("%L = model.%L!!", it.name, it.name)
-                .endControlFlow()
+            if (!it.isRelationField)
+                builder.beginControlFlow("if(model.%L != null)", it.name)
+                    .addStatement("%L = model.%L!!", it.name, it.name)
+                    .endControlFlow()
+//            setRelationField(it, builder)
         }
         builder.addStatement("}")
         val funSpec = builder
@@ -128,7 +182,7 @@ class DaoClassGen(private val classDefinition: ClassDefinition) {
     private fun getByIdFun(): FunSpec {
         val builder = FunSpec.builder("getById")
             .addKdoc("根据[id]列表查询数据")
-            .addParameter("id", Int::class)
+            .addParameter("id", idKtType)
             .returns(model.copy(true))
             .addStatement("return db.entities.findById(%T::class,id)", model)
         return builder.build()
@@ -137,7 +191,7 @@ class DaoClassGen(private val classDefinition: ClassDefinition) {
     private fun getByIdsFun(): FunSpec {
         val builder = FunSpec.builder("getById")
             .addKdoc("根据[ids]列表查询数据")
-            .addParameter("ids", List::class.parameterizedBy(Int::class))
+            .addParameter("ids", List::class.parameterizedBy(idKtType))
             .addStatement("return db.entities.findByIds(%T::class,ids)", model)
         return builder.build()
     }
@@ -145,7 +199,7 @@ class DaoClassGen(private val classDefinition: ClassDefinition) {
     private fun deleteByIdsFun(): FunSpec {
         val builder = FunSpec.builder("deleteById")
             .addKdoc("根据[ids]列表删除数据")
-            .addParameter("ids", List::class.parameterizedBy(Int::class))
+            .addParameter("ids", List::class.parameterizedBy(idKtType))
             .returns(Int::class)
             .addStatement("val result = db.createDelete(%T::class){", model)
             .addStatement("where(table.id %M ids )", JimmerMember.valueInFun)
@@ -158,7 +212,7 @@ class DaoClassGen(private val classDefinition: ClassDefinition) {
     private fun deleteByIdFun(): FunSpec {
         val builder = FunSpec.builder("deleteById")
             .addKdoc("根据[id]列表删除数据")
-            .addParameter("id", Int::class)
+            .addParameter("id", idKtType)
             .returns(Int::class)
             .addStatement("val result = db.createDelete(%T::class){", model)
             .addStatement("where(table.id eq id )")
